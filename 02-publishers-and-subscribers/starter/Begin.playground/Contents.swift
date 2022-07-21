@@ -1,6 +1,8 @@
 import Foundation
 import Combine
 
+// MARK: - NOTION STUDY NOTES LINK - https://sudsy-stocking-559.notion.site/Subscriber-Operators-Subjects-5c4a250ca2c14ce0ad25292ade3e0ea3
+
 var subscriptions = Set<AnyCancellable>()
 
 example(of: "NotificationCenter") {
@@ -61,6 +63,42 @@ example(of: "PassthroughSubject") {
     subject
         .sink(receiveValue: { print($0) })
         .store(in: &subscriptions)
+
+    subject.send("Hello")
+    subject.send("World")
+    subject.send(completion: .finished)
+    subject.send("Still there?")
+}
+
+example(of: "CurrentValueSubject") {
+    /// initializing a CurrentValueSubject requires an initial value to be specified, an Int of value 0 for example here
+    let subject = CurrentValueSubject<Int, Never>(0)
+
+    subject
+        .print()
+        .sink(receiveValue: { print($0) })
+        .store(in: &subscriptions)
+
+    print(subject.value)
+
+    subject.send(1)
+    subject.send(2)
+
+    print(subject.value)
+
+    subject.send(completion: .finished)
+}
+
+example(of: "Type erasure") {
+    let subject = PassthroughSubject<Int, Never>()
+
+    let publisher = subject.eraseToAnyPublisher()
+
+    publisher
+        .sink(receiveValue: { print($0) })
+        .store(in: &subscriptions)
+
+    subject.send(0)
 }
 /// Copyright (c) 2020 Razeware LLC
 ///
