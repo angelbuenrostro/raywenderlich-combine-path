@@ -1,10 +1,105 @@
 import Foundation
 import Combine
 
+// MARK: - NOTION STUDY NOTES LINK - https://sudsy-stocking-559.notion.site/Subscriber-Operators-Subjects-5c4a250ca2c14ce0ad25292ade3e0ea3
+
 var subscriptions = Set<AnyCancellable>()
 
-<#Add your code here#>
+example(of: "NotificationCenter") {
 
+    let center = NotificationCenter.default
+    let myNotification = Notification.Name("MyNotification")
+
+    let publisher = center
+        .publisher(for: myNotification, object: nil)
+
+    let subscription = publisher
+        .print()
+        .sink { _ in
+            print("Notification received from a publisher")
+        }
+
+    center.post(name: myNotification, object: nil)
+    subscription.cancel()
+}
+
+example(of: "Just") {
+
+    let just = Just("Hello World")
+
+    just
+        .sink(
+        receiveCompletion: {
+            print("Received Completion", $0)
+        },
+        receiveValue: {
+            print("Received Value", $0)
+        })
+        .store(in: &subscriptions)
+}
+
+
+example(of: "assign(to:on:)") {
+    class SomeObject {
+        var value: String = "" {
+            didSet {
+                print(value)
+            }
+        }
+    }
+
+    let object = SomeObject()
+
+    ["Hello", "World!"].publisher
+        .assign(to: \.value, on: object)
+        .store(in: &subscriptions)
+}
+
+example(of: "PassthroughSubject") {
+    let subject = PassthroughSubject<String, Never>()
+    /// this type of publisher needs explicitly declared types because it is initialized without starting values
+    /// which the compiler cannot infer as it did with the standard `Publisher` type
+
+    subject
+        .sink(receiveValue: { print($0) })
+        .store(in: &subscriptions)
+
+    subject.send("Hello")
+    subject.send("World")
+    subject.send(completion: .finished)
+    subject.send("Still there?")
+}
+
+example(of: "CurrentValueSubject") {
+    /// initializing a CurrentValueSubject requires an initial value to be specified, an Int of value 0 for example here
+    let subject = CurrentValueSubject<Int, Never>(0)
+
+    subject
+        .print()
+        .sink(receiveValue: { print($0) })
+        .store(in: &subscriptions)
+
+    print(subject.value)
+
+    subject.send(1)
+    subject.send(2)
+
+    print(subject.value)
+
+    subject.send(completion: .finished)
+}
+
+example(of: "Type erasure") {
+    let subject = PassthroughSubject<Int, Never>()
+
+    let publisher = subject.eraseToAnyPublisher()
+
+    publisher
+        .sink(receiveValue: { print($0) })
+        .store(in: &subscriptions)
+
+    subject.send(0)
+}
 /// Copyright (c) 2020 Razeware LLC
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
